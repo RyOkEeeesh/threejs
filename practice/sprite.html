@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html, body {
+        width: 100%;
+        min-height: 100vh;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+
+      // サイズを指定
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // レンダラーを作成
+      const renderer = new THREE.WebGLRenderer({
+        canvas: document.querySelector("#myCanvas"),
+      });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(width, height);
+      renderer.setClearColor(0xf9f9f9, 1.0);
+
+      // シーンを作成
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xf9f9f9, 200, 300);
+
+      // カメラを作成
+      const camera = new THREE.PerspectiveCamera(45, width / height);
+
+      const texture = new THREE.TextureLoader().load("./img/star.png");
+      texture.colorSpace = THREE.SRGBColorSpace;
+
+      // マテリアルを作成する
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+      });
+      // フォグ（霞）を有効にする
+      material.fog = true;
+
+      // ビルボードを作成
+      for (let i = 0; i < 1000; i++) {
+        const sprite = new THREE.Sprite(material);
+        // ランダムな座標に配置
+        sprite.position.x = 500 * (Math.random() - 0.5);
+        sprite.position.y = 100 * Math.random() - 40;
+        sprite.position.z = 500 * (Math.random() - 0.5);
+        // 必要に応じてスケールを調整
+        sprite.scale.set(10, 10, 10);
+
+        scene.add(sprite);
+      }
+
+      // 地面を作成
+      const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
+      plane.position.y = -40;
+      scene.add(plane);
+
+
+      const draw = () => {
+        camera.position.x = 100 * Math.sin(Date.now() / 2000);
+        camera.position.z = 100 * Math.cos(Date.now() / 2000);
+        camera.position.y = 50 * Math.sin(Date.now() / 1000) + 60;
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(draw); // 再帰的に呼び出す
+      }
+
+      draw();
+
+      window.onresize = () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        renderer.setSize(width, height);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      };
+    </script>
+  </head>
+  <body>
+    <canvas id="myCanvas"></canvas>
+  </body>
+</html>

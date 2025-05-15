@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const canvas = document.querySelector("canvas");
+
+  const renderer = new THREE.WebGLRenderer({canvas});
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+  camera.position.set(0, 0, 500);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+
+  {
+    const size = 3000;
+    const quantity = 1000;
+
+    const vertices = [];
+
+    for (let i = 0; i < quantity; i++) vertices.push(
+      (Math.random() - 0.5) * size,
+      (Math.random() - 0.5) * size,
+      (Math.random() - 0.5) * size
+    );
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+    const material = new THREE.PointsMaterial({
+      // 一つ一つのサイズ
+      size: 10,
+      // 色
+      color: 0xffffff,
+      // 透明度
+      transparent: true,
+      // 透明度の値
+      opacity: 0.9,
+      // テクスチャ
+      map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png'),
+    });
+
+    const mesh = new THREE.Points(geometry, material);
+    scene.add(mesh); 
+  }
+
+  window.onresize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  const draw = () => {
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(draw);
+  };
+
+  draw();
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+
+  const canvas = document.querySelector('canvas');
+  let width = window.innerWidth;
+  let height = window.innerHeight
+
+  const renderer = new THREE.WebGLRenderer({canvas});
+  renderer.setSize(width, height);
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width/height);
+  camera.position.set(20, 20, 20);
+  camera.lookAt(new THREE.Vector3(0, 4, 0));
+
+  //床を作成
+  const meshFloor = new THREE.Mesh(
+    new THREE.BoxGeometry(2000, 0.1, 2000),
+    new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 }),
+  )
+  scene.add(meshFloor);
+
+  // オブジェクト作成
+  const meshKnot = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(3, 1, 100, 16),
+    new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.0 }),
+  )
+  meshKnot.position.set(0, 5, 0);
+  scene.add(meshKnot);
+
+  // 環境光源を作成
+  // new THREE.AmbientLight(色, 光の強さ)
+  // const light = new THREE.AmbientLight(0xffffff, 1.0);
+  // scene.add(light);
+
+  // 平行光源を作成
+  // new THREE.DirectionalLight(色, 光の強さ)
+  // const light = new THREE.DirectionalLight(0xffffff, 1);
+  // 照明を可視化するヘルパー
+  // const lightHelper = new THREE.DirectionalLightHelper(light);
+
+  // 半球光源を作成
+  // new THREE.HemisphereLight(上の色, 下の色, 光の強さ)
+  // const light = new THREE.HemisphereLight(0xffffff, 0x0000ff, 1.0);
+  // const lightHelper = new THREE.HemisphereLightHelper(light, 1.0);
+
+  // 点光源を作成
+  // new THREE.PointLight(色, 光の強さ, 距離, 減衰率)
+  // const light = new THREE.PointLight(0xffffff, 2.0, 100, 1.0);
+  // const lightHelper = new THREE.PointLightHelper(light, 1.0);
+
+  //スポットライト光源を作成
+  // new THREE.SpotLight(色, 光の強さ, 照射角, ボケ具合(max 1), 減衰率)
+  // const light = new THREE.SpotLight(0xffffff, 4, 50, Math.PI / 4, 1, 0.5);
+  // const lightHelper = new THREE.SpotLightHelper(light, 1.0);
+
+  // 短形光源を作成
+  // new THREE.RectAreaLight(色, 光の強さ, 幅, 高さ)
+  const light = new THREE.RectAreaLight(0xffffff, 5, 10, 10);
+
+  scene.add(light);
+  // scene.add(lightHelper);
+
+  const draw = () => {
+    const t = Date.now() / 500;
+    const r = 10.0;
+    const lx = r * Math.cos(t);
+    const lz = r * Math.sin(t);
+    const ly = 6.0 + 5.0 * Math.sin(t / 3.0);
+    light.position.set(lx, ly, lz);
+    // lightHelper.update();
+    light.lookAt(new THREE.Vector3(0, 0, 0));
+    renderer.render(scene, camera);
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+
+  window.onresize = () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  };
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

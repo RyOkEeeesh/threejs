@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" defer>
+    import * as THREE from 'three';
+    import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+    const canvas = document.querySelector('canvas');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    const renderer = new THREE.WebGLRenderer({canvas});
+    renderer.setSize(width, height);
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+    camera.position.set(0, 0, 1000);
+
+
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.2;
+
+
+
+    const geometry = new THREE.SphereGeometry(300, 30, 30);
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load('./img/moonmap4k.jpg');
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    const material = new THREE.MeshStandardMaterial({map: texture});
+
+    const mesh = new THREE.Mesh(geometry, material);
+
+    scene.add(mesh);
+
+    const DirectionalLight = new THREE.DirectionalLight(0xFFFFFF);
+    DirectionalLight.position.set(1, 1, 1);
+
+    scene.add(DirectionalLight);
+
+    const draw = () => {
+      mesh.rotation.y += 0.001;
+      renderer.render(scene, camera);
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    window.onresize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      controls.update();
+    }
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

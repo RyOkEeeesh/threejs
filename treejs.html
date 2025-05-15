@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" defer>
+
+    /* global THREE */
+
+import * as THREE from 'three';
+
+const main = () => {
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+
+  const makeInstance = (geometry, color, x) => {
+    const material = new THREE.MeshPhongMaterial({color});
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.x = x;
+    scene.add(cube);
+    return cube;
+  };
+
+  const canvas = document.querySelector('#c') || document.body.appendChild(document.createElement('canvas'));
+  // rendererにcanvasを渡す
+  // renderer : WebGLを使用し3Dをcanvasにレンダリングする
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    canvas
+  });
+  renderer.setSize(width, height)
+
+  // カメラの作成
+  // about img ./frustum-3d.svg
+  const fov = 75;
+  const aspect = width / height; // canvas default ... 300 / 150 = 2
+  const near = 0.1;
+  const far = 100;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+  // カメラの座標
+  // カメラはデフォルトで、Yを上にして-Z軸を見下ろしている
+  // 位置 : (0, 0, 0)
+  // 向き : (0, 0, -1)
+  // 上方向 : (0, -1, 0)
+
+  // position.set(x, y, z)
+  camera.position.set(0, 0, +5);
+  // camera.position.z = 2;
+
+  // シーンの作成
+  const scene = new THREE.Scene();
+
+  // ジオメトリーの作成
+  // boxの設定
+  const boxWidth = 1;
+  const boxHeight = 1;
+  const boxDepth = 1;
+
+  // BoxGeometry(幅, 高さ, 奥行)
+  const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+  // マテリアルの作成
+  // 色は標準CSSスタイルの16進数6桁
+  // MeshBasicMaterialは光源の影響を受けない
+  // const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
+
+  // メッシュの作成
+  // const cube = new THREE.Mesh(geometry, material);
+
+  // メッシュをシーンに追加する
+  // scene.add(cube);
+
+  const cubes = [
+    makeInstance(geometry, 0x44aa88,  0),
+    makeInstance(geometry, 0x8844aa, -2),
+    makeInstance(geometry, 0xaa8844,  2)
+  ];
+
+  const lightColor = 0xFFFFFF;
+  const intensity = 3;
+  const light = new THREE.DirectionalLight(lightColor, intensity);
+  light.position.set(-1, 2, 4);
+  scene.add(light);
+
+  // レンダリング
+  // renderer.render(scene, camera);
+
+
+  window.onresize = () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    // renderer.render(scene, camera);
+  };
+
+  const render = time => {
+    time *= 0.001;
+
+    cubes.forEach((cube, ndx) => {
+      const speed = 1 + ndx * .1;
+      const rot = time * speed;
+      cube.rotation.x = rot;
+      cube.rotation.y = rot;
+    });
+    // cube.rotation.x = time;
+    // cube.rotation.y = time;
+    // cube.rotation.z = time;
+
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(render);
+  }
+
+  render();
+
+}
+
+main();
+
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+</body>
+</html>
