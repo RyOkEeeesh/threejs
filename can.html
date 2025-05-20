@@ -97,26 +97,36 @@
     const topRadius = 27; // 上面半径調整用
 
     // 底面設定
-    const bottomRadius = topRadius - 3.5;
+    const topBottomDifference = 5;
+    const legLen = 5;
+    const legWeight = 1.5;
+    const bottomRadius = topRadius - topBottomDifference;
+    const control = 0.5;
 
 
     /* 底面 */ {
-
-      const bottomHeight = 9;
+      const bottomHeight = 11;
       y = bottomHeight;
 
       const points = [
       ...curve(
         vec2(x, y),
-        vec2(x = (bottomRadius - 0.5) / 2 + x, y),
-        vec2(x = (bottomRadius - 0.5), y = 4),
+        vec2((bottomRadius - control) / 2 + x, y),
+        vec2(x = (bottomRadius - control), y = legLen + control),
       ), 
-        vec2(x += 0.5, y -= 0.5),
-      ]
-      x = Math.floor(x + 1);
-      y = 0;
-      points.push(vec2(x, y));
-
+      vec2(x += control, y = legLen),
+      vec2(x = Math.floor(x + 1), y = 0.5),
+      ...curve(
+        vec2(x, y),
+        vec2(x + legWeight / 2, -y),
+        vec2(x += legWeight, y),
+        6
+      ),
+      ...curve(
+        vec2(x, y),
+        vec2(x, y + legLen / 2),
+        vec2(x = radius - 1, y = legLen + 2)
+      )];
 
       const geometry = new THREE.LatheGeometry(points, segments);
       geometry.translate(0, 0, 0);
@@ -125,7 +135,12 @@
 
     } /* 側面 */ {
 
-      const points = [];
+      const points = [...curve(
+        vec2(x, y),
+        vec2(radius - control / 3, y + control / 3),
+        vec2(++x, ++y),
+        4
+      )];
       const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
       const topDent = 16; // へこみ高さ調整用
       const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
