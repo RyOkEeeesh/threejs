@@ -1,0 +1,61 @@
+開始点から円を作成
+
+const arcPosition = (radius, deg, degStart = 0, seg = Math.sqrt(segments)) => {
+  const points = [];
+  const rad = (deg * Math.PI) / 180;
+  const radStart = (degStart * Math.PI) / 180;
+  const radEnd = radStart + rad;
+  const step = rad / seg;
+
+  const startPosition = [x, y];
+
+  for (let i = 0; i <= seg; i++) {
+    const angle = radStart + step * i;
+    x = round(radius * Math.sin(angle));
+    y = round(startPosition[1] - radius + radius * Math.cos(angle));
+    points.push(vec2(x, y));
+  }
+
+  return points;
+}
+
+開始点、終了点、カーブの高さを指定
+ベジェ曲線
+
+const arcBezier = (start /* vector2 */, end /* vector2 */, arcHeight = 0, seg = Math.sqrt(segments)) => {
+  const points = [];
+
+  // 中点
+  const mx = (start.x + end.x) / 2;
+  const my = (start.y + end.y) / 2;
+
+  // 垂直方向にふくらませる制御点
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const length = Math.sqrt(dx * dx + dy * dy);
+  const nx = -dy / length;
+  const ny = dx / length;
+
+  const control = new THREE.Vector2(
+    mx + nx * arcHeight,
+    my + ny * arcHeight
+  );
+
+  for (let t = 0; t <= 1; t += 1 / seg) {
+    const x = (1 - t) ** 2 * start.x + 2 * (1 - t) * t * control.x + t ** 2 * end.x;
+    const y = (1 - t) ** 2 * start.y + 2 * (1 - t) * t * control.y + t ** 2 * end.y;
+    points.push(new THREE.Vector2(x, y));
+  }
+
+  return points;
+};
+
+開始点、制御店、終了点　指定
+THREEjs のベジェ曲線
+
+const curve = (start, point, end, seg = Math.sqrt(segments)) => 
+  new THREE.QuadraticBezierCurve(
+    start,
+    point,
+    end
+  ).getPoints(seg);

@@ -82,39 +82,37 @@
 
     const round = num => Math.round(num * 1000) / 1000;
     const vec2 = (x, y) => new THREE.Vector2(x, y);
-    const arcPosition = (radius, deg, degStart = 0, seg = Math.sqrt(segments)) => {
-      const points = [];
-      const rad = (deg * Math.PI) / 180;
-      const radStart = (degStart * Math.PI) / 180;
-      const radEnd = radStart + rad;
-      const step = rad / seg;
 
-      const startPosition = [x, y];
-
-      for (let i = 0; i <= seg; i++) {
-        const angle = radStart + step * i;
-        x = round(radius * Math.sin(angle));
-        y = round(startPosition[1] - radius + radius * Math.cos(angle));
-        points.push(vec2(x, y));
-      }
-
-      return points;
-    }
+    const curve = (start, point, end, seg = Math.sqrt(segments)) => 
+      new THREE.QuadraticBezierCurve(
+        start,
+        point,
+        end
+      ).getPoints(seg);
 
     const group = new THREE.Group();
     const material = new THREE.MeshBasicMaterial({wireframe: true});
+
+    // 上面設定
+    const topRasiud = 27; // 上面半径調整用
+
+    // 底面設定
+    const bottomRadius = topRasiud - 3.5;
+
 
     /* 底面 */ {
 
       const bottomHeight = 9;
       y = bottomHeight;
 
-      const points = arcPosition(50, 28);
+      const points = curve(
+        vec2(x, y),
+        vec2(x = bottomRadius / 2 + x, y),
+        vec2(x = bottomRadius, y = 3.5),
+      );
       x = Math.floor(x + 1);
       y = 0;
       points.push(vec2(x, y));
-
-      console.log(points)
 
 
       const geometry = new THREE.LatheGeometry(points, segments);
@@ -126,7 +124,6 @@
 
       const points = [];
       const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
-      const topRasiud = 27; // 上面半径調整用
       const topDent = 16; // へこみ高さ調整用
       const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
 
