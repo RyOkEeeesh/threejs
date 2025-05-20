@@ -82,17 +82,19 @@
 
     const round = num => Math.round(num * 1000) / 1000;
     const vec2 = (x, y) => new THREE.Vector2(x, y);
-    const arcPosition = (radius, deg, degStart = 0, startPosition = [0, 0], seg = Math.sqrt(segments)) => {
+    const arcPosition = (radius, deg, degStart = 0, seg = Math.sqrt(segments)) => {
       const points = [];
       const rad = (deg * Math.PI) / 180;
       const radStart = (degStart * Math.PI) / 180;
       const radEnd = radStart + rad;
       const step = rad / seg;
 
+      const startPosition = [x, y];
+
       for (let i = 0; i <= seg; i++) {
         const angle = radStart + step * i;
-        x = startPosition[1] + radius * Math.sin(angle);
-        y = startPosition[0] + radius * Math.cos(angle);
+        x = + radius * Math.sin(angle);
+        y = startPosition[1] - radius + radius * Math.cos(angle);
         points.push(vec2(x, y));
       }
 
@@ -105,17 +107,18 @@
     /* 底面 */ {
 
       const bottomHeight = 16;
-      x = bottomHeight;
+      y = bottomHeight;
 
-      const points = []//arcPosition(30, 30, 0, [x, y]);
+      const points = arcPosition(60, 20);
 
 
+      console.log(points)
 
 
       const geometry = new THREE.LatheGeometry(points, segments);
       geometry.translate(0, 0, 0);
       const mesh = new THREE.Mesh(geometry, material);
-      //group.add(mesh);
+      group.add(mesh);
 
     } /* 側面 */ {
 
