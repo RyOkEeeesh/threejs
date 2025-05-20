@@ -94,10 +94,10 @@
     const material = new THREE.MeshBasicMaterial({wireframe: true});
 
     // 上面設定
-    const topRasiud = 27; // 上面半径調整用
+    const topRadius = 27; // 上面半径調整用
 
     // 底面設定
-    const bottomRadius = topRasiud - 3.5;
+    const bottomRadius = topRadius - 3.5;
 
 
     /* 底面 */ {
@@ -138,7 +138,7 @@
       let tmpX = 0;
 
       for (let seg = 1; seg <= topDentSegments; seg++) points.push(vec2(
-        tmpX = x - getCosNormalized(deg + degStep * seg) * (radius - topRasiud),
+        tmpX = x - getCosNormalized(deg + degStep * seg) * (radius - topRadius),
         y += segStep
       ));
       x = tmpX;
