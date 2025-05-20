@@ -93,8 +93,8 @@
 
       for (let i = 0; i <= seg; i++) {
         const angle = radStart + step * i;
-        x = + radius * Math.sin(angle);
-        y = startPosition[1] - radius + radius * Math.cos(angle);
+        x = round(radius * Math.sin(angle));
+        y = round(startPosition[1] - radius + radius * Math.cos(angle));
         points.push(vec2(x, y));
       }
 
@@ -106,11 +106,13 @@
 
     /* 底面 */ {
 
-      const bottomHeight = 16;
+      const bottomHeight = 9;
       y = bottomHeight;
 
-      const points = arcPosition(60, 20);
-
+      const points = arcPosition(50, 28);
+      x = Math.floor(x + 1);
+      y = 0;
+      points.push(vec2(x, y));
 
       console.log(points)
 
@@ -124,9 +126,9 @@
 
       const points = [];
       const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
-      const topRasiud = 8; // 
+      const topRasiud = 27; // 上面半径調整用
       const topDent = 16; // へこみ高さ調整用
-      const getCos = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) * 3 // へこみ具合調整値;
+      const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
 
       x = radius;
       points.push(vec2(x, y));
@@ -136,12 +138,13 @@
       const segStep = topDent / topDentSegments;
       let deg = 180;
       const degStep = deg / topDentSegments;
+      let tmpX = 0;
 
       for (let seg = 1; seg <= topDentSegments; seg++) points.push(vec2(
-        x - getCos(deg += degStep),
+        tmpX = x - getCosNormalized(deg + degStep * seg) * (radius - topRasiud),
         y += segStep
       ));
-      x -= getCos(deg)
+      x = tmpX;
 
       const geometry = new THREE.LatheGeometry(points, segments);
       const mesh = new THREE.Mesh(geometry, material);
