@@ -77,9 +77,12 @@
 
   const makeCan = (radius, height, segments = 64 /* 2進数 */) => {
 
+    let x = 0;
+    let y = 0;
+
     const round = num => Math.round(num * 1000) / 1000;
     const vec2 = (x, y) => new THREE.Vector2(x, y);
-    const arcLine = (radius, deg, degStart = 0, seg = segments ** (1/4)) => {
+    const arcPosition = (radius, deg, degStart = 0, startPosition = [0, 0], seg = Math.sqrt(segments)) => {
       const points = [];
       const rad = (deg * Math.PI) / 180;
       const radStart = (degStart * Math.PI) / 180;
@@ -88,29 +91,31 @@
 
       for (let i = 0; i <= seg; i++) {
         const angle = radStart + step * i;
-        points.push(vec2(
-          radius * Math.cos(angle),
-          radius * Math.sin(angle)
-        ));
+        x = startPosition[1] + radius * Math.sin(angle);
+        y = startPosition[0] + radius * Math.cos(angle);
+        points.push(vec2(x, y));
       }
 
       return points;
     }
 
-
     const group = new THREE.Group();
     const material = new THREE.MeshBasicMaterial({wireframe: true});
 
-    let x = 0;
-    let y = 0;
-
     /* 底面 */ {
 
-    const bottomGeometry = new THREE.CircleGeometry(radius, segments);
-    bottomGeometry.rotateX(Math.PI / 2);
-    bottomGeometry.translate(0, 0, 0);
-    const bottomMesh = new THREE.Mesh(bottomGeometry, material);
-    group.add(bottomMesh);
+      const bottomHeight = 16;
+      x = bottomHeight;
+
+      const points = []//arcPosition(30, 30, 0, [x, y]);
+
+
+
+
+      const geometry = new THREE.LatheGeometry(points, segments);
+      geometry.translate(0, 0, 0);
+      const mesh = new THREE.Mesh(geometry, material);
+      //group.add(mesh);
 
     } /* 側面 */ {
 
@@ -135,9 +140,9 @@
       ));
       x -= getCos(deg)
 
-      const latheGeometry = new THREE.LatheGeometry(points, segments);
-      const sideMesh = new THREE.Mesh(latheGeometry, material);
-      group.add(sideMesh);
+      const geometry = new THREE.LatheGeometry(points, segments);
+      const mesh = new THREE.Mesh(geometry, material);
+      group.add(mesh);
 
     }
 
