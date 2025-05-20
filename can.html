@@ -105,11 +105,14 @@
       const bottomHeight = 9;
       y = bottomHeight;
 
-      const points = curve(
+      const points = [
+      ...curve(
         vec2(x, y),
-        vec2(x = bottomRadius / 2 + x, y),
-        vec2(x = bottomRadius, y = 3.5),
-      );
+        vec2(x = (bottomRadius - 0.5) / 2 + x, y),
+        vec2(x = (bottomRadius - 0.5), y = 4),
+      ), 
+        vec2(x += 0.5, y -= 0.5),
+      ]
       x = Math.floor(x + 1);
       y = 0;
       points.push(vec2(x, y));
