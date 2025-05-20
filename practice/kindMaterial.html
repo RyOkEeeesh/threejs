@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+
+  const canvas = document.querySelector('canvas');
+
+  const renderer = new THREE.WebGLRenderer({canvas});
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+
+  const makeGeometry = () => new THREE.BoxGeometry(1, 1, 1);
+  const makeMesh = ( geometry, material ) => new THREE.Mesh(geometry, material);
+
+  const scene = new THREE.Scene();
+  const fov = 75;
+  const aspect = width / height;
+  const near = 0.1;
+  const far = 100;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+  camera.position.set(2, 1, 5);
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(2, 1, 10).normalize();
+  scene.add(light);
+
+  // MeshBasicMaterial
+  const geometry1 = makeGeometry();
+  const material1 = new THREE.MeshBasicMaterial({color : 0x6699FF});
+  const mesh1 = makeMesh(geometry1, material1);
+  mesh1.position.set(0, 2, 0);
+  scene.add(mesh1);
+
+  // MeshNormalMaterial
+  const geometry2 = makeGeometry();
+  const material2 = new THREE.MeshNormalMaterial();
+  const mesh2 = makeMesh(geometry2, material2);
+  mesh2.position.set(2, 2, 0);
+  scene.add(mesh2);
+
+  // MeshLambertMaterial
+  const geometry3 = makeGeometry();
+  const material3 = new THREE.MeshLambertMaterial({color : 0x6699FF});
+  const mesh3 = makeMesh(geometry3, material3);
+  mesh3.position.set(4, 2, 0);
+  scene.add(mesh3);
+
+  // MeshPhongMaterial
+  const geometry4 = makeGeometry();
+  const material4 = new THREE.MeshPhongMaterial({color : 0x6699FF});
+  const mesh4 = makeMesh(geometry4, material4);
+  mesh4.position.set(0, 0, 0);
+  scene.add(mesh4);
+
+  // MeshToonMaterial
+  const geometry5 = makeGeometry();
+  const material5 = new THREE.MeshToonMaterial({color : 0x6699FF});
+  const mesh5 = makeMesh(geometry5, material5);
+  mesh5.position.set(2, 0, 0);
+  scene.add(mesh5);
+
+  // MeshStandardMaterial
+  const geometry6 = makeGeometry();
+  const material6 = new THREE.MeshStandardMaterial({color : 0x6699FF});
+  const mesh6 = makeMesh(geometry6, material6);
+  mesh6.position.set(4, 0, 0);
+  scene.add(mesh6);
+
+  renderer.render(scene, camera);
+
+  const meshes = [ mesh1,mesh2,mesh3,mesh4,mesh5,mesh6 ];
+
+  const draw = time => {
+    time *= 0.001;
+    meshes.forEach(mesh => mesh.rotation.set(time, time, 0));
+    renderer.render(scene, camera);
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

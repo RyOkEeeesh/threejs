@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.webgpu.js",
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.webgpu.js"
+      }
+    }
+  </script>
+  <script type="module">
+    import * as THREE from "three";
+    import { WebGPURenderer } from "three/webgpu";
+    // サイズを指定
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // レンダラーを作成
+    const renderer = new WebGPURenderer({
+      canvas: document.querySelector("canvas"),
+      antialias: true
+    });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(width, height);
+    renderer.setClearColor(0x000000); // 背景色を指定
+    await renderer.init(); // ★ WebGPU レンダラーの初期化 (非同期)
+
+    // シーンを作成
+    const scene = new THREE.Scene();
+
+    // カメラを作成
+    const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
+    camera.position.set(0, 0, 1000); // カメラの位置を指定
+
+    // フォグを設定
+    scene.fog = new THREE.Fog(0x000000, 50, 2000); // (色, 開始距離, 終了距離)
+    // scene.fog = new THREE.FogExp2(0x000000, 0.001); // 指数的なフォグ (色, フォグの濃度)
+
+    // グループを作成
+    const group = new THREE.Group();
+    scene.add(group); // シーンにグループを追加
+    const geometry = new THREE.BoxGeometry(50, 50, 50); // ジオメトリを作成
+    const material = new THREE.MeshStandardMaterial(); // マテリアルを作成
+
+    for (let i = 0; i < 1000; i++) {
+      const mesh =new THREE.Mesh(geometry, material); // メッシュを作成
+      mesh.position.x = (Math.random() - 0.5) * 2000;
+      mesh.position.y = (Math.random() - 0.5) * 2000;
+      mesh.position.z = (Math.random() - 0.5) * 2000;
+      mesh.rotation.x = Math.random() * 2 * Math.PI;
+      mesh.rotation.y = Math.random() * 2 * Math.PI;
+      mesh.rotation.z = Math.random() * 2 * Math.PI;
+      // グループに格納する
+      group.add(mesh);
+    }
+
+    // 光源
+    scene.add(new THREE.DirectionalLight(0xff0000, 2)); // 平行光源
+    scene.add(new THREE.AmbientLight(0x00ffff)); // 環境光源
+
+    const draw = () => {
+      // 描画
+      renderer.render(scene, camera);
+      // アニメーション
+      group.rotation.y += 0.005;
+      requestAnimationFrame(draw); // 再帰的に呼び出す
+    }
+
+    window.onresize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    };
+
+    draw();
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

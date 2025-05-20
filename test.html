@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" defer>
+
+    /* global THREE */
+
+import * as THREE from 'three';
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+const main = () => {
+  // Audio
+  const audio = new Audio('./music (2).mp3');
+  const FFT = 512;
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const audioSource = audioContext.createMediaElementSource(audio);
+  const analyser = audioContext.createAnalyser();
+  analyser.smoothingTimeConstant = 0.8;
+  audioSource.connect(analyser);
+  analyser.connect(audioContext.destination);
+  analyser.fftSize = FFT;
+
+  analyser.minDecibels = -90;
+  analyser.maxDecibels = -10;
+
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+
+
+  let width = window.innerWidth;
+  let height = window.innerHeight;
+
+  const makeInstance = (geometry, color, x) => {
+    const material = new THREE.MeshPhongMaterial({color});
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.x = x;
+    scene.add(cube);
+    return cube;
+  };
+
+  const canvas = document.querySelector('#c') || document.body.appendChild(document.createElement('canvas'));
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    canvas
+  });
+  renderer.setSize(width, height)
+  const fov = 75;
+  const aspect = width / height;
+  const near = 0.1;
+  const far = 1000;
+  const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+  camera.position.set(0, 0, 2.5);
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+
+  const scene = new THREE.Scene();
+
+  const segment = FFT / 2;
+  const geometry = new THREE.SphereGeometry(1, segment, segment * 2 );
+
+  const loader = new THREE.TextureLoader();
+  const texture = loader.load('./practice/img/moonmap4k.jpg');
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const material = new THREE.MeshStandardMaterial({map: texture});
+  // const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: true });
+  const sphere = new THREE.Mesh(geometry, material);
+  sphere.rotation.z = Math.PI / 2;
+  scene.add(sphere);
+
+  const lightColor = 0xFFFFFF;
+  const intensity = 4;
+  const light = new THREE.DirectionalLight(lightColor, intensity);
+  light.position.set(-1, 1, 3);
+  scene.add(light);
+
+  window.onresize = () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  };
+
+  let play = false;
+  let first = true;
+
+  const draw = time => {
+
+    const getFilteredData = (dataArray, sampleRate, maxFrequency) => {
+      const nyquist = sampleRate / 2;
+      const maxIndex = Math.floor(maxFrequency / nyquist * dataArray.length);
+      return dataArray.slice(0, maxIndex);
+    };
+
+    const calculateAverage = dataArray => {
+      const sum = dataArray.reduce((acc, value) => acc + value, 0);
+      return sum / dataArray.length;
+    }
+
+    const getMaxAmplitude = dataArray => Math.max(...dataArray)
+
+    analyser.getByteFrequencyData(dataArray);
+    const filteredData = getFilteredData(dataArray, audioContext.sampleRate, 13750);
+    // const avgFrequency = calculateAverage(filteredData);
+    // const maxFrequency = getMaxAmplitude(filteredData);
+    // console.log(`avg : ${avgFrequency}  max : ${maxFrequency}`);
+
+
+    const position = geometry.attributes.position;
+    for (let i = 0; i < position.count; i++) {
+      const vertex = new THREE.Vector3().fromBufferAttribute(position, i);
+      const dataIndex = Math.floor(i / position.count * filteredData.length);
+      const scale = filteredData[dataIndex] / segment;
+      vertex.normalize().multiplyScalar( 1 + scale * 0.5 );
+      position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+    }
+    position.needsUpdate = true;
+
+    // sphere.rotation.y += 0.0005;
+
+    renderer.render(scene, camera);
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+
+  window.onclick = () => {
+    audio.play()
+    play = true;
+  };
+
+}
+
+main();
+
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+</body>
+</html>

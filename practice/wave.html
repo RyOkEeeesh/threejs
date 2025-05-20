@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.webgpu.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/",
+        "Stats": "https://unpkg.com/stats.js@0.17.0/src/Stats.js"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { WebGPURenderer } from "three/webgpu";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  import { SimplexNoise } from "three/addons/math/SimplexNoise.js";
+  import Stats from "Stats"; // スタッツ使用時、インポートマップに追加 "Stats": "./stats.js-master/src/Stats.js"
+
+  // スタッツを作成
+  const stats = new Stats();
+  stats.showPanel(0);
+  document.body.appendChild(stats.dom);
+
+  // ノイズを初期化
+  const simplexNoise = new SimplexNoise();
+  const value = simplexNoise.noise(0, 0);
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const canvas = document.querySelector("canvas");
+
+  const renderer = new WebGPURenderer({
+    canvas,
+    antialias: true
+  });
+  // WebGPURenderer を使用したとき、不具合が出る場合があるので
+  // const renderer = new THREE.WebGLRenderer({
+  //   canvas,
+  //   antialias: true
+  // });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.setClearColor(0x000000);
+  await renderer.init();
+  // renderer.shadowMap.enabled = true; // 影を有効にする
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+  camera.position.set(1200, 1200, 1200);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+  controls.target.set(0, 0, 0);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+  ambientLight.position.set(0, 3, 0);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+
+  const giometry = new THREE.PlaneGeometry(1000, 1000, 80, 80);
+  const material = new THREE.MeshLambertMaterial({
+    color: 0x4fc1ff,
+    flatShading: true,
+    side: THREE.DoubleSide
+  })
+
+  const mesh = new THREE.Mesh(giometry, material);
+  mesh.rotation.x = Math.PI / 2;
+  scene.add(mesh);
+
+  const changePosition = () => {
+    const position = mesh.geometry.attributes.position;
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i);
+      const y = position.getY(i);
+      const time = Date.now() * 0.0003;
+
+      const z = simplexNoise.noise(x * 0.001 + time, y * 0.001 + time) * 150;
+      position.setZ(i, z);
+    }
+    position.needsUpdate = true;
+  };
+
+  window.onresize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  const draw = () => {
+    stats.begin(); // スタッツの開始
+    changePosition();
+    controls.update();
+    renderer.render(scene, camera);
+    stats.end(); // スタッツの終了
+    requestAnimationFrame(draw);
+  };
+
+  draw();
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.webgpu.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { WebGPURenderer } from "three/webgpu";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  // import Stats from "Stats"; スタッツ使用時、インポートマップに追加 "Stats": "./stats.js-master/src/Stats.js"
+
+  // スタッツを作成
+  // const stats = new Stats();
+  // stats.showPanel(0); // 0: fps, 1: ms, 2: memory
+  // document.body.appendChild(stats.dom); // DOM に追加
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const canvas = document.querySelector("canvas");
+
+  const renderer = new WebGPURenderer({
+    canvas,
+    antialias: true
+  });
+  // WebGPURenderer を使用したとき、不具合が出る場合があるので
+  // const renderer = new THREE.WebGLRenderer({
+  //   canvas,
+  //   antialias: true
+  // });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.setClearColor(0x000000);
+  await renderer.init();
+  // renderer.shadowMap.enabled = true; // 影を有効にする
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+  camera.position.z = 200;
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(200, 0, 0);
+  scene.add(light);
+
+
+  const makeCan = (radius, height, segments = 64 /* 2進数 */) => {
+
+    const round = num => Math.round(num * 1000) / 1000;
+    const vec2 = (x, y) => new THREE.Vector2(x, y);
+    const arcLine = (radius, deg, degStart = 0, seg = segments ** (1/4)) => {
+      const points = [];
+      const rad = (deg * Math.PI) / 180;
+      const radStart = (degStart * Math.PI) / 180;
+      const radEnd = radStart + rad;
+      const step = rad / seg;
+
+      for (let i = 0; i <= seg; i++) {
+        const angle = radStart + step * i;
+        points.push(vec2(
+          radius * Math.cos(angle),
+          radius * Math.sin(angle)
+        ));
+      }
+
+      return points;
+    }
+
+
+    const group = new THREE.Group();
+    const material = new THREE.MeshBasicMaterial({wireframe: true});
+
+    let x = 0;
+    let y = 0;
+
+    /* 底面 */ {
+
+    const bottomGeometry = new THREE.CircleGeometry(radius, segments);
+    bottomGeometry.rotateX(Math.PI / 2);
+    bottomGeometry.translate(0, 0, 0);
+    const bottomMesh = new THREE.Mesh(bottomGeometry, material);
+    group.add(bottomMesh);
+
+    } /* 側面 */ {
+
+      const points = [];
+      const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
+      const topRasiud = 8; // 
+      const topDent = 16; // へこみ高さ調整用
+      const getCos = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) * 3 // へこみ具合調整値;
+
+      x = radius;
+      points.push(vec2(x, y));
+      y = height - topDent;
+      points.push(vec2(x, y));
+
+      const segStep = topDent / topDentSegments;
+      let deg = 180;
+      const degStep = deg / topDentSegments;
+
+      for (let seg = 1; seg <= topDentSegments; seg++) points.push(vec2(
+        x - getCos(deg += degStep),
+        y += segStep
+      ));
+      x -= getCos(deg)
+
+      const latheGeometry = new THREE.LatheGeometry(points, segments);
+      const sideMesh = new THREE.Mesh(latheGeometry, material);
+      group.add(sideMesh);
+
+    }
+
+    // 上面
+    const topGeometry = new THREE.CircleGeometry(x, segments);
+    topGeometry.rotateX(-Math.PI / 2);
+    topGeometry.translate(0, y, 0);
+    const topMesh = new THREE.Mesh(topGeometry, material);
+    group.add(topMesh);
+
+    group.position.set(0, -height / 2, 0)
+
+    return group;
+  }
+
+  scene.add(makeCan(33, 122));
+
+
+  window.onresize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  const draw = () => {
+    // stats.begin(); // スタッツの開始
+    renderer.render(scene, camera);
+    // stats.end(); // スタッツの終了
+    requestAnimationFrame(draw);
+  };
+
+  draw();
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.webgpu.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { WebGPURenderer } from "three/webgpu";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  // マウス座標を格納する変数
+  const mousePosition = new THREE.Vector2();
+  // マウスを動かした時のイベント
+  const mouseMoveEvt = e => {
+    const elem = e.currentTarget;
+
+    const elemRect = elem.getBoundingClientRect();
+    const x = e.clientX - elemRect.left;
+    const y = e.clientY - elemRect.top;
+
+    const w = elemRect.width;
+    const h = elemRect.height;
+
+    // マウス座標を -1.0 から 1.0 の範囲に変換
+    mousePosition.x = (x / w) * 2 - 1;
+    mousePosition.y = -(y / h) * 2 + 1;
+  }
+
+  const canvas = document.querySelector("canvas");
+
+  canvas.onmousemove = mouseMoveEvt;
+
+  const renderer = new WebGPURenderer({
+    canvas,
+    antialias: true
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.setClearColor(0x000000);
+  await renderer.init();
+  // renderer.shadowMap.enabled = true; // 影を有効にする
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+  camera.position.set(0, 0, 1000);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+
+  const cubuQuantity = 200;
+  const size = 800;
+
+  const meshList = [];
+
+  for (let i = 0; i < cubuQuantity; i++) {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(50, 50, 50),
+      new THREE.MeshStandardMaterial({ color: 0xffffff })
+    );
+
+    mesh.position.set(
+      (Math.random() - 0.5) * size,
+      (Math.random() - 0.5) * size,
+      (Math.random() - 0.5) * size
+    );
+    mesh.rotation.set(
+      Math.random() * 2 * Math.PI,
+      Math.random() * 2 * Math.PI,
+      Math.random() * 2 * Math.PI
+    );
+    scene.add(mesh);
+    meshList.push(mesh);
+  }
+
+  console.log(meshList);
+
+  // 平行光源
+  const directionalLight = new THREE.DirectionalLight(0xffffff);
+  directionalLight.position.set(1, 1, 1);
+  scene.add(directionalLight);
+
+  // 環境光源
+  const ambientLight = new THREE.AmbientLight(0x333333);
+  scene.add(ambientLight);
+
+  // レイキャストを作成
+  const raycaster = new THREE.Raycaster();
+
+  const draw = () => {
+    // レイキャスト = マウス位置からまっすぐに伸びる光線ベクトルを生成
+    raycaster.setFromCamera(mousePosition, camera);
+
+    // レイキャストで当たったオブジェクトを取得
+    const intersects = raycaster.intersectObjects(meshList);
+
+    meshList.map(mesh => {
+      // 交差しているオブジェクトが1つ以上存在し、
+      // 交差しているオブジェクトの1番目(最前面)のものだったら
+      if (intersects.length > 0 && mesh === intersects[0].object) {
+        // 色を赤くする
+        mesh.material.color.setHex(0xff0000);
+      } else {
+        // それ以外は元の色にする
+        mesh.material.color.setHex(0xffffff);
+      }
+    });
+
+    renderer.render(scene, camera);
+    requestAnimationFrame(draw);
+
+  }
+
+  window.onresize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  draw();
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

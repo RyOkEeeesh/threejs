@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.webgpu.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/",
+        "Stats": "./stats.js-master/src/Stats.js"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { WebGPURenderer } from "three/webgpu";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  import Stats from "Stats";
+
+  const stats = new Stats();
+  stats.showPanel(0);
+  document.body.appendChild(stats.dom);
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const canvas = document.querySelector("canvas");
+
+  // WebGPURenderer を使用したとき、不具合が出る場合があるので
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.setClearColor(0x000000);
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+  camera.position.set(0, 100, 0);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+
+
+  const quentity = 1000;
+  const vertices = [];
+  const speeds = [];
+
+  for (let i = 0; i < 1000; i++) {
+    vertices.push(0, 0, 0);
+    const [x, y, z] = Array.from({ length: 3 }, () => (Math.random() - 0.5) * 2);
+    speeds.push(new THREE.Vector3(x, y, z));
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
+  const material = new THREE.PointsMaterial({
+    size: 2,
+    color: 0xffffff
+  })
+
+  const mesh = new THREE.Points(geometry, material);
+  scene.add(mesh);
+
+  const changePosition = () => {
+    const position = mesh.geometry.attributes.position;
+
+    for (let i = 0; i < position.count; i++) {
+      const xyz = {
+        x: position.getX(i),
+        y: position.getY(i),
+        z: position.getZ(i)
+      }
+
+      const [nextX, nextY, nextZ] = Object.keys(xyz).map(direction => xyz[direction] + speeds[i][direction]);
+      position.setXYZ(i, nextX, nextY, nextZ);
+
+      const len = new THREE.Vector3(xyz.x, xyz.y, xyz.z).length();
+      if (len > 100) position.setXYZ(i, 0, 0, 0);
+    }
+
+    position.needsUpdate = true;
+  };
+
+  window.onresize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  const draw = () => {
+    stats.begin();
+    controls.update();
+    changePosition();
+    renderer.render(scene, camera);
+    stats.end();
+    requestAnimationFrame(draw);
+  };
+
+  draw();
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

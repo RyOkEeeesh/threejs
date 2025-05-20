@@ -1,0 +1,145 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js Sample kind camera</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html, body {
+        width: 100%;
+        min-height: 100vh;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // レンダラーを作成
+      const renderer = new THREE.WebGLRenderer({
+        canvas: document.querySelector("canvas"),
+        antialias: true,
+      });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(width, height);
+      renderer.shadowMap.enabled = true;
+
+      const scene = new THREE.Scene();
+
+      const perspectiveCamera = new THREE.PerspectiveCamera(60, width / height, 1, 10000);
+      const orthographicCamera = new THREE.OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 10000);
+
+      let camera = perspectiveCamera;
+
+      const toggleCamera = () => camera = camera === perspectiveCamera ? orthographicCamera : perspectiveCamera;
+      window.onclick = toggleCamera;
+
+      // ライトの作成
+      {
+        const spotLight = new THREE.SpotLight(0xffffff, 200, 2000, Math.PI / 5, 0.2, 0.5);
+        spotLight.position.set(500, 300, 500);
+        spotLight.castShadow = true; // 影を落とす設定
+        spotLight.shadow.mapSize.width = 2048;
+        spotLight.shadow.mapSize.height = 2048;
+        scene.add(spotLight);
+      }
+
+      // 地面を作成
+      {
+        // 床のテクスチャー
+        const texture = new THREE.TextureLoader().load("./img/floor.png");
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping; // リピート可能に
+        texture.repeat.set(10, 10); // 10x10マスに設定
+        texture.magFilter = THREE.NearestFilter; // アンチエイリアスを外す
+
+        const floor = new THREE.Mesh(
+          new THREE.PlaneGeometry(1000, 1000),
+          new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.0,
+            metalness: 0.6,
+          }),
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true; // 影の設定
+        scene.add(floor);
+      }
+
+      // マス目を作成
+      {
+        // 立方体のマテリアルとジオメトリを作成
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x22dd22,
+          roughness: 0.1,
+          metalness: 0.2,
+        });
+        const geometry = new THREE.BoxGeometry(45, 45, 45);
+
+        // 立方体を複数作成しランダムに配置
+        for (let i = 0; i < 60; i++) {
+          const box = new THREE.Mesh(geometry, material);
+          box.position.x = Math.round((Math.random() - 0.5) * 19) * 50 + 25;
+          box.position.y = 25;
+          box.position.z = Math.round((Math.random() - 0.5) * 19) * 50 + 25;
+          // 影の設定
+          box.receiveShadow = true;
+          box.castShadow = true;
+          scene.add(box);
+        }
+      }
+
+      // 毎フレーム時に実行されるループイベントです
+      const draw = () => {
+        // 角度に応じてカメラの位置を設定
+        camera.position.x = 1000 * Math.sin(Date.now() / 2000);
+        camera.position.y = 500;
+        camera.position.z = 1000 * Math.cos(Date.now() / 2000);
+        // 原点方向を見つめる
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(draw);
+      }
+
+      draw();
+
+      window.onresize = () => {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        
+        orthographicCamera.left = -width / 2;
+        orthographicCamera.right = width / 2;
+        orthographicCamera.top = height / 2;
+        orthographicCamera.bottom = -height / 2;
+        orthographicCamera.updateProjectionMatrix();
+
+      };
+    </script>
+  </head>
+  <body>
+    <canvas></canvas>
+  </body>
+</html>

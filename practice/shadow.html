@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/",
+        "Stats": "./stats.js-master/src/Stats.js"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  import Stats from "Stats";
+
+  const canvas = document.querySelector('canvas');
+  let width = window.innerWidth;
+  let height = window.innerHeight
+
+  // スタッツを作成
+  const stats = new Stats();
+  stats.showPanel(0); // 0: fps, 1: ms, 2: memory
+  document.body.appendChild(stats.dom); // DOM に追加
+
+
+  const renderer = new THREE.WebGLRenderer({canvas});
+  renderer.setSize(width, height);
+  // レンダラーの車道を有効にする
+  renderer.shadowMap.enabled = true;
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width/height);
+  camera.position.set(20, 20, 20);
+  camera.lookAt(new THREE.Vector3(0, 5, 0));
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+  controls.target.set(0, 5, 0);
+  controls.update();
+
+  // カメラの制御
+  controls.minDistance = 10;
+  controls.maxDistance = 1000;
+
+  controls.minPolarAngle = 0; // 下限
+  controls.maxPolarAngle = Math.PI / 2; // 上限
+
+  controls.mouseButtons = {
+    LEFT: THREE.MOUSE.ROTATE,
+    MIDDLE: THREE.MOUSE.DOLLY,
+    RIGHT: null // 右クリックを無効にする
+  };
+  controls.touches = {
+    ONE: THREE.TOUCH.ROTATE,
+    TWO: THREE.TOUCH.DOLLY_PAN
+  };
+
+
+  const meshFloor = new THREE.Mesh(
+    new THREE.BoxGeometry(2000, 0.1, 2000),
+    new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 }),
+  )
+  // 影をつけるメッシュに対して、receiveShadowを有効にする
+  meshFloor.receiveShadow = true;
+  scene.add(meshFloor);
+
+  const meshKnot = new THREE.Mesh(
+    new THREE.TorusKnotGeometry(3, 1, 100, 16),
+    new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.0 }),
+  )
+  // 影を落とすメッシュに対して、castShadowを有効にする
+  meshKnot.castShadow = true;
+  meshKnot.position.set(0, 5, 0);
+  scene.add(meshKnot);
+
+  const light = new THREE.SpotLight(0xffffff, 400, 100, Math.PI / 4, 1);
+  // ライトに影を有効にする
+  light.castShadow = true;
+  scene.add(light);
+  light.position.set(0, 20, 5);
+  light.lookAt(new THREE.Vector3(0, 0, 0));
+
+  // 影の解像度を上げる
+  light.shadow.mapSize.width = 2048;
+  light.shadow.mapSize.height = 2048;
+
+
+  const draw = () => {
+    stats.begin(); // スタッツの計測開始
+    const t = Date.now() / 500;
+    const r = 20.0;
+    const lx = r * Math.cos(t);
+    const lz = r * Math.sin(t);
+    const ly = 20.0 + 5.0 * Math.sin(t / 3.0);
+    light.position.set(lx, ly, lz);
+    renderer.render(scene, camera);
+    stats.end(); // スタッツの計測終了
+    requestAnimationFrame(draw);
+  };
+
+  draw();
+  window.onresize = () => {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  };
+
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>
