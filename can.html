@@ -106,6 +106,7 @@
 
 
     /* 底面 */ {
+
       const bottomHeight = 11;
       y = bottomHeight;
 
@@ -135,6 +136,7 @@
       group.add(mesh);
 
     } /* 側面 */ {
+
       const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
       const topDent = 16; // へこみ高さ調整用
       const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
@@ -160,18 +162,18 @@
       x = tmpX;
 
       const geometry = new THREE.LatheGeometry(points, segments);
-
       const mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
 
-    }
+    } /* 上面 */ {
 
-    // 上面
-    const topGeometry = new THREE.CircleGeometry(x, segments);
-    topGeometry.rotateX(-Math.PI / 2);
-    topGeometry.translate(0, y, 0);
-    const topMesh = new THREE.Mesh(topGeometry, material);
-    group.add(topMesh);
+      const topGeometry = new THREE.CircleGeometry(x, segments);
+      topGeometry.rotateX(-Math.PI / 2);
+      topGeometry.translate(0, y, 0);
+      const topMesh = new THREE.Mesh(topGeometry, material);
+      group.add(topMesh);
+
+    }
 
     group.position.set(0, -height / 2, 0)
 
@@ -179,7 +181,6 @@
   }
 
   scene.add(makeCan(33, 122));
-
 
   window.onresize = () => {
     const width = window.innerWidth;
