@@ -25,7 +25,8 @@
       "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
         "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.webgpu.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/",
+        "Stats": "https://unpkg.com/stats.js@0.17.0/src/Stats.js"
       }
     }
   </script>
@@ -34,12 +35,12 @@
   import * as THREE from 'three';
   import { WebGPURenderer } from "three/webgpu";
   import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-  // import Stats from "Stats"; スタッツ使用時、インポートマップに追加 "Stats": "./stats.js-master/src/Stats.js"
+  import Stats from "Stats";
 
   // スタッツを作成
-  // const stats = new Stats();
-  // stats.showPanel(0); // 0: fps, 1: ms, 2: memory
-  // document.body.appendChild(stats.dom); // DOM に追加
+  const stats = new Stats();
+  stats.showPanel(0);
+  document.body.appendChild(stats.dom);
 
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -134,21 +135,18 @@
       group.add(mesh);
 
     } /* 側面 */ {
-
+      const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
+      const topDent = 16; // へこみ高さ調整用
+      const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
       const points = [...curve(
         vec2(x, y),
         vec2(radius - control / 3, y + control / 3),
         vec2(++x, ++y),
         4
-      )];
-      const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
-      const topDent = 16; // へこみ高さ調整用
-      const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
-
-      x = radius;
-      points.push(vec2(x, y));
-      y = height - topDent;
-      points.push(vec2(x, y));
+      ),
+      vec2(x = radius, y),
+      vec2(x, y = height - topDent)
+      ];
 
       const segStep = topDent / topDentSegments;
       let deg = 180;
@@ -162,6 +160,7 @@
       x = tmpX;
 
       const geometry = new THREE.LatheGeometry(points, segments);
+
       const mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
 
@@ -192,9 +191,9 @@
   };
 
   const draw = () => {
-    // stats.begin(); // スタッツの開始
+    stats.begin();
     renderer.render(scene, camera);
-    // stats.end(); // スタッツの終了
+    stats.end();
     requestAnimationFrame(draw);
   };
 
