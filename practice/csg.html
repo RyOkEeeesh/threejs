@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" defer>
+  /* global THREE */
+  import * as THREE from 'three';
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+  import { CSG } from 'https://cdn.skypack.dev/three-csg-ts';
+
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  const canvas = document.querySelector("canvas");
+
+  // WebGPURenderer を使用したとき、不具合が出る場合があるので
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true
+  });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  // renderer.shadowMap.enabled = true; // 影を有効にする
+
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+  camera.position.set(0, 0, 100);
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.2;
+
+  // 板
+  const base = new THREE.Mesh(
+    new THREE.BoxGeometry(100, 100, 10),
+    new THREE.MeshNormalMaterial()
+  );
+
+  // へこみ用の円柱
+  const dent = new THREE.Mesh(
+    new THREE.CylinderGeometry(20, 20, 4, 32),
+    new THREE.MeshNormalMaterial()
+  );
+  dent.rotation.x = Math.PI / 2;
+  dent.position.z = 3;
+
+  // CSG演算
+  const result = CSG.subtract(base, dent);
+  scene.add(result);
+
+
+  window.onresize = () => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  const draw = () => {
+    // stats.begin(); // スタッツの開始
+    renderer.render(scene, camera);
+    // stats.end(); // スタッツの終了
+    requestAnimationFrame(draw);
+  };
+
+  </script>
+</head>
+<body>
+  <canvas></canvas>
+</body>
+</html>

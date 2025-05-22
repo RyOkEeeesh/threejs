@@ -2,53 +2,13 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>Three.js 穴あきジオメトリ</title>
-  <style>
-    body { margin: 0; }
-    canvas { display: block; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script async>
+    (() => alert('hello'))();
+  </script>
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script>
-    // シーン、カメラ、レンダラーの設定
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // 形状の作成（外枠）
-    const shape = new THREE.Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(100, 0);
-    shape.lineTo(100, 100);
-    shape.lineTo(0, 100);
-    shape.lineTo(0, 0);
-
-    // 穴の作成（円）
-    const hole = new THREE.Path();
-    hole.absellipse(50, 50, 20, 20, 0, Math.PI * 2, false);
-    shape.holes.push(hole);
-
-    // 押し出しジオメトリ
-    const extrudeSettings = { depth: 10, bevelEnabled: false };
-    const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    const material = new THREE.MeshNormalMaterial();
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
-    // カメラ位置
-    camera.position.z = 200;
-
-    // アニメーション
-    function animate() {
-      requestAnimationFrame(animate);
-      mesh.rotation.x += 0.01;
-      mesh.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-    animate();
-  </script>
+  
 </body>
 </html>
