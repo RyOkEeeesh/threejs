@@ -95,8 +95,9 @@
 
     const round = num => Math.round(num * 1000) / 1000;
     const vec2 = (x, y) => new THREE.Vector2(x, y);
+    const getSegments = (split = 1, max = 4) => Math.max(Math.floor(Math.sqrt(segments)) / split, max)
 
-    const curve = (start, point, end, seg = Math.sqrt(segments)) => 
+    const curve = (start, point, end, seg = getSegments()) => 
       new THREE.QuadraticBezierCurve(
         start,
         point,
@@ -146,7 +147,6 @@
         vec2(x, y),
         vec2(x + legWeight / 2, -y),
         vec2(x += legWeight, y),
-        6
       ),
       ...curve(
         vec2(x, y),
@@ -172,7 +172,7 @@
         vec2(x, y),
         vec2(radius - control / 3, y + control / 3),
         vec2(++x, ++y),
-        4
+        getSegments(2)
       ),
       vec2(x = radius, y),
       vec2(x, y = height - topDent - edgsHeight)
@@ -206,29 +206,27 @@
           vec2(x, y),
           vec2(x + control / 2, y - 0.2),
           vec2(x += control, y),
-          4
+          getSegments(2)
         ), ...curve(
           vec2(x, y),
           vec2(x + 0.2, y + (height - y) / 2),
           vec2(x,  y = height),
-          4
+          getSegments(2)
         ), ...curve(
           vec2(x, y),
           vec2(x - (x - topRadius) / 2, y + 0.2),
           vec2(x = topRadius, y),
-          4
+          getSegments(2)
         ),
         vec2(x -= control, y = height - edgsDepth + control),
         ...curve(
           vec2(x, y),
           vec2(x - control / 6, y - 1),
           vec2(x -= control / 2, y -= 0.3),
-          6
         ), ...curve(
           vec2(x, y),
           vec2(x, y + 1),
           vec2(x -= 0.3, ++y),
-          8
         ), ...curve(
           vec2(x, y),
           vec2(x / 2, y += 1.5),
@@ -255,7 +253,7 @@
     return group;
   }
 
-  scene.add(makeCan());
+  scene.add(makeCan(128));
 
   window.onresize = () => {
     const width = window.innerWidth;
