@@ -75,8 +75,10 @@
   light.position.set(200, 0, 0);
   scene.add(light);
 
+  const makeCan = (segments = 64 /* 2進数 */) => {
 
-  const makeCan = (radius, height, segments = 64 /* 2進数 */) => {
+    const radius = 33;
+    const height = 122;
 
     let x = 0;
     let y = 0;
@@ -96,6 +98,9 @@
 
     // 上面設定
     const topRadius = 27; // 上面半径調整用
+    const edgsHeight = 1.8;// 飲み口高さ
+    const edgsDepth = 5;
+
 
     // 底面設定
     const topBottomDifference = 5;
@@ -130,7 +135,10 @@
         vec2(x = radius - 1, y = legLen + 2)
       )];
 
-      const geometry = new THREE.LatheGeometry(points, segments);
+      const geometry = new THREE.LatheGeometry(points.map(v => ({
+        x: round(v.x),
+        y: round(v.y)
+      })), segments);
       geometry.translate(0, 0, 0);
       const mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
@@ -138,16 +146,17 @@
     } /* 側面 */ {
 
       const topDentSegments = Math.floor(Math.sqrt(segments)); // default 8
-      const topDent = 16; // へこみ高さ調整用
-      const getCosNormalized = deg => (round(Math.cos(deg * (Math.PI / 180))) + 1) / 2;
-      const points = [...curve(
+      const topDent = 16 - edgsHeight; // へこみ高さ調整用
+      const getCosNormalized = deg => (Math.cos(deg * (Math.PI / 180)) + 1) / 2;
+      const points = [
+      ...curve(
         vec2(x, y),
         vec2(radius - control / 3, y + control / 3),
         vec2(++x, ++y),
         4
       ),
       vec2(x = radius, y),
-      vec2(x, y = height - topDent)
+      vec2(x, y = height - topDent - edgsHeight)
       ];
 
       const segStep = topDent / topDentSegments;
@@ -161,18 +170,64 @@
       ));
       x = tmpX;
 
-      const geometry = new THREE.LatheGeometry(points, segments);
+      points.push(vec2(topRadius, height));
+
+      const geometry = new THREE.LatheGeometry(points.map(v => ({
+        x: round(v.x),
+        y: round(v.y)
+      })), segments);
       const mesh = new THREE.Mesh(geometry, material);
       group.add(mesh);
 
     } /* 上面 */ {
 
-      const points = []
-      const topGeometry = new THREE.CircleGeometry(x, segments);
-      topGeometry.rotateX(-Math.PI / 2);
-      topGeometry.translate(0, y, 0);
-      const topMesh = new THREE.Mesh(topGeometry, material);
-      group.add(topMesh);
+      const points = [
+        vec2(x, y),
+        ...curve(
+          vec2(x, y),
+          vec2(x + control / 2, y - 0.2),
+          vec2(x += control, y),
+          4
+        ), ...curve(
+          vec2(x, y),
+          vec2(x + 0.2, y + (height - y) / 2),
+          vec2(x,  y = height),
+          4
+        ), ...curve(
+          vec2(x, y),
+          vec2(x - (x - topRadius) / 2, y + 0.2),
+          vec2(x = topRadius, y),
+          4
+        ),
+        vec2(x -= control, y = height - edgsDepth + control),
+        ...curve(
+          vec2(x, y),
+          vec2(x - control / 6, y - 1),
+          vec2(x -= control / 2, y -= 0.3),
+          4
+        ), ...curve(
+          vec2(x, y),
+          vec2(x - 0.2, y + 1),
+          vec2(--x, y += 1),
+          8
+        ), ...curve(
+          vec2(x, y),
+          vec2(x / 2, y += 1.5),
+          vec2(0, y)
+        )
+      ];
+
+      console.log(points.map(v => ({
+        x: round(v.x),
+        y: round(v.y)
+      })));
+
+      const geometry = new THREE.LatheGeometry(points.map(v => ({
+        x: round(v.x),
+        y: round(v.y)
+      })), segments);
+      const mesh = new THREE.Mesh(geometry, material);
+      group.add(mesh);
 
     }
 
@@ -181,7 +236,7 @@
     return group;
   }
 
-  scene.add(makeCan(33, 122));
+  scene.add(makeCan());
 
   window.onresize = () => {
     const width = window.innerWidth;
