@@ -234,11 +234,6 @@
         )
       ];
 
-      console.log(points.map(v => ({
-        x: round(v.x),
-        y: round(v.y)
-      })));
-
       const geometry = new THREE.LatheGeometry(points.map(v => ({
         x: round(v.x),
         y: round(v.y)
